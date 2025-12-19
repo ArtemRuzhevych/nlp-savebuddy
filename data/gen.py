@@ -1,49 +1,98 @@
 # data/gen.py
 
 import json
-import random
+import secrets
 import datetime
+import random
+
+# Use SystemRandom for float-based randomness where secrets doesn't provide a direct equivalent
+secure_gen = random.SystemRandom()
 
 # =========================
 # Configuration
 # =========================
 
-NUM_SAMPLES = 175
+NUM_SAMPLES = 1000
 
 INTENTS = ["individual_saving", "group_saving"]
-GROUPS = ["family", "roommates", "trip", "wedding", "friends"]
-GOALS = ["gym", "rent", "vacation", "groceries", "emergency fund", "new phone"]
+# Simulated Database of Groups
+GROUP_DATABASE = [
+    {"id": 1, "name": "family"},
+    {"id": 2, "name": "roommates"},
+    {"id": 3, "name": "trip"},
+    {"id": 4, "name": "wedding"},
+    {"id": 5, "name": "friends"},
+    {"id": 6, "name": "hiking club"},
+    {"id": 7, "name": "colleagues"},
+    {"id": 8, "name": "band"},
+    {"id": 9, "name": "travel buddies"},
+    {"id": 10, "name": "apartment"},
+    {"id": 11, "name": "startup"},
+    {"id": 12, "name": "neighbors"}
+]
+GROUPS = [g["name"] for g in GROUP_DATABASE]
+GROUP_SYNONYMS = ["group", "squad", "pool", "pot", "savings", "fund", "team", "circle"]
+GOALS = [
+    "gym", "rent", "vacation", "groceries", "emergency fund", "new phone",
+    "laptop", "bitcoin", "gifts", "car", "insurance", "investment", "education",
+    "concert", "gaming pc", "charity", "house downpayment"
+]
 
-FREQUENCIES = ["daily", "weekly", "monthly", "n-times"]
-DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+FREQUENCIES = ["daily", "weekly", "monthly", "n-times", "bi-weekly", "fortnightly", "quarterly"]
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday", "weekend", "weekday"]
 
+SAVING_VERBS = [
+    "Save", "Put aside", "Stash", "Deposit", "Transfer", "Add", "Invest", "Move", 
+    "Set aside", "Keep", "Allocate", "Budget"
+]
+
+PROMPT_PREFIXES = [
+    "", "I want to ", "Please ", "Hey Buddy, ", "Can you ", "Start to ", 
+    "I'd like to ", "Automatically ", "Setup a plan to ", "Need to "
+]
+
+
+def format_amount(amount):
+    if secure_gen.random() < 0.3:
+        return f"{amount}.{secrets.randbelow(100):02d}"
+    return str(amount)
 
 CURRENCY_FORMATS = [
-    lambda a: f"€{a}",
-    lambda a: f"{a}€",
-    lambda a: f"EUR{a}",
-    lambda a: f"EUR {a}",
-    lambda a: f"{a} EUR",
-    lambda a: f"${a}",
-    lambda a: f"{a} USD",
-    lambda a: f"USD{a}",
-    lambda a: f"USD {a}",
-    lambda a: f"£{a}",
-    lambda a: f"PLN {a}",
-    lambda a: f"PLN{a}",
-    lambda a: f"{a}zł",
-    lambda a: f"{a}zl",
-    lambda a: f"{a} zl",
-    lambda a: f"{a} zł",
+    lambda a: f"€{format_amount(a)}",
+    lambda a: f"{format_amount(a)}€",
+    lambda a: f"EUR{format_amount(a)}",
+    lambda a: f"EUR {format_amount(a)}",
+    lambda a: f"{format_amount(a)} EUR",
+    lambda a: f"${format_amount(a)}",
+    lambda a: f"{format_amount(a)} USD",
+    lambda a: f"USD{format_amount(a)}",
+    lambda a: f"USD {format_amount(a)}",
+    lambda a: f"£{format_amount(a)}",
+    lambda a: f"{format_amount(a)} GBP",
+    lambda a: f"GBP {format_amount(a)}",
+    lambda a: f"PLN {format_amount(a)}",
+    lambda a: f"PLN{format_amount(a)}",
+    lambda a: f"{format_amount(a)}zł",
+    lambda a: f"{format_amount(a)}zl",
+    lambda a: f"{format_amount(a)} zl",
+    lambda a: f"{format_amount(a)} zł",
+    lambda a: f"{format_amount(a)} bucks",
+    lambda a: f"{format_amount(a)} quid",
 ]
 
 TYPO_MAP = {
-    "save": ["svae", "saev", "sav", "sve"],
-    "every": ["evry", "evey", "evvery"],
-    "weekly": ["wekly", "weekyl", "wekely"],
-    "monthly": ["montly", "monhtly"],
-    "until": ["untill", "til", "till"],
-    "Wednesday": ["wednedsay", "wednsday"]
+    "save": ["svae", "saev", "sav", "sve", "seve"],
+    "every": ["evry", "evey", "evvery", "evryone"],
+    "weekly": ["wekly", "weekyl", "wekely", "weely"],
+    "monthly": ["montly", "monhtly", "mothly"],
+    "until": ["untill", "til", "till", "untl"],
+    "Wednesday": ["wednedsay", "wednsday", "wednesday"],
+    "Thursday": ["thrusday", "thursdy"],
+    "emergency": ["emergncy", "emergensy"],
+    "vacation": ["vaca", "vaction"],
+    "friends": ["freinds", "frends"],
+    "deposit": ["depost", "deposite"],
+    "quarterly": ["quaterly", "quartely"]
 }
 
 # =========================
@@ -51,36 +100,34 @@ TYPO_MAP = {
 # =========================
 
 def random_amount():
-    return random.randint(5, 500)
+    return secrets.randbelow(496) + 5  # 5 to 500
 
 def random_date():
     start = datetime.date.today()
-    end = start + datetime.timedelta(days=180)
-    return str(start + (end - start) * random.random())
+    end = start + datetime.timedelta(days=secure_gen.randint(30, 365))
+    random_days = secure_gen.randint(0, (end - start).days)
+    return str(start + datetime.timedelta(days=random_days))
 
 def inject_typos(text: str) -> str:
     for word, typos in TYPO_MAP.items():
-        if word.lower() in text.lower() and random.random() < 0.3:
-            text = text.replace(word, random.choice(typos))
-    if random.random() < 0.15:
+        if word.lower() in text.lower() and secure_gen.random() < 0.3:
+            text = text.replace(word, secrets.choice(typos))
+    if secure_gen.random() < 0.15:
         text = text.replace(" ", "")
     return text
 
-def confidence_from_nulls(data: dict) -> float:
-    nulls = sum(1 for v in data.values() if v is None)
-    return round(max(0.35, 1 - nulls * 0.12), 2)
 
 def extract_currency(prompt: str):
     currencies = set()
 
-    if "€" in prompt or "EUR" in prompt:
+    if any(kw in prompt for kw in ("€", "EUR", "euro")):
         currencies.add("EUR")
-    if "$" in prompt or "USD" in prompt:
+    if any(kw in prompt for kw in ("$", "USD", "bucks")):
         currencies.add("USD")
-    if "£" in prompt or "GBP" in prompt:
+    if any(kw in prompt for kw in ("£", "GBP", "quid")):
         currencies.add("GBP")
-    if any(currency_code in prompt for currency_code in ("zł", "PLN", "zl")):
-        currencies.add("GBP")
+    if any(kw in prompt for kw in ("zł", "PLN", "zl", "zloty", "złoty")):
+        currencies.add("PLN")
 
     if len(currencies) == 1:
         return currencies.pop(), False
@@ -110,45 +157,68 @@ def generate_clarification(issues: list) -> str:
 # =========================
 
 def money_string(amount: int) -> str:
-    return random.choice(CURRENCY_FORMATS)(amount)
+    return secrets.choice(CURRENCY_FORMATS)(amount)
 
 def frequency_phrase(freq: str) -> str:
     if freq == "daily":
-        return "every day"
+        return secrets.choice(["every day", "daily", "each day", "on a daily basis"])
     if freq == "weekly":
-        return f"every {random.choice(DAYS)}"
+        return secrets.choice([f"every {secrets.choice(DAYS)}", "weekly", "each week", "once a week"])
     if freq == "monthly":
-        return "every month"
-    return f"{random.randint(2,10)} times"
+        return secrets.choice(["every month", "monthly", "each month", "once a month", "at the end of the month"])
+    if freq == "fortnightly":
+        return secrets.choice(["every two weeks", "fortnightly", "bi-weekly"])
+    if freq == "quarterly":
+        return secrets.choice(["every three months", "quarterly", "each quarter"])
+    if freq == "bi-weekly":
+        return "bi-weekly"
+    return secrets.choice([f"{secure_gen.randint(2, 10)} times", f"{secure_gen.randint(2, 5)} times a week"])
 
 def maybe_conflicting_frequency(freq: str):
-    if random.random() < 0.25:
-        return f"{frequency_phrase(freq)} {frequency_phrase(random.choice(FREQUENCIES))}"
+    if secure_gen.random() < 0.20:
+        return f"{frequency_phrase(freq)} and also {frequency_phrase(secrets.choice(FREQUENCIES))}"
     return frequency_phrase(freq)
 
 def maybe_conflicting_condition():
-    if random.random() < 0.25:
+    if secure_gen.random() < 0.20:
         return "until March until I reach my goal"
-    return random.choice([
+    return secrets.choice([
         f"until {random_date()}",
         "until I reach my goal",
         "but skip holidays",
+        "starting from next week",
+        "as long as I have money",
         ""
     ])
 
 def maybe_conflicting_goal(goal: str):
-    if random.random() < 0.2:
-        return f"{goal} for {random.choice(GOALS)}"
+    if secure_gen.random() < 0.15:
+        return f"{goal} for {secrets.choice(GOALS)}"
     return goal
 
 def build_prompt(intent, amount, freq, goal, group):
+    prefix = secrets.choice(PROMPT_PREFIXES)
+    verb = secrets.choice(SAVING_VERBS)
+    
     parts = [
-        f"Save {money_string(amount)}",
+        f"{prefix}{verb} {money_string(amount)}",
         maybe_conflicting_frequency(freq)
     ]
 
     if intent == "group_saving":
-        parts.append(f"for {group}")
+        group_ref = secrets.choice([
+            f"{group}",
+            f"the {group} {secrets.choice(GROUP_SYNONYMS)}",
+            f"my {group} {secrets.choice(GROUP_SYNONYMS)}",
+            f"our {group} {secrets.choice(GROUP_SYNONYMS)}",
+            f"{group} squad",
+            f"existing {group} group",
+            f"existing {group} squad",
+            f"the {group} squad",
+            f"my {group} squad"
+        ])
+        parts.append(secrets.choice(["for", "to", "with", "into", "towards"]))
+        parts.append(group_ref)
     else:
         parts.append(f"for {maybe_conflicting_goal(goal)}")
 
@@ -156,7 +226,7 @@ def build_prompt(intent, amount, freq, goal, group):
     if condition:
         parts.append(condition)
 
-    return inject_typos(" ".join(parts))
+    return inject_typos(" ".join(filter(None, parts)))
 
 # =========================
 # Interpretation Logic
@@ -199,14 +269,37 @@ def interpret(prompt, intent, amount, freq, goal, group):
         needs_clarification = True
         issues.append("amount")
 
+    is_existing_group = False
+    if intent == "group_saving":
+        # Logic to detect if the prompt refers to an existing group
+        existing_keywords = ["existing", "my ", "our ", "the ", "towards "]
+        if any(kw in prompt.lower() for kw in existing_keywords):
+            is_existing_group = True
+        
+        # Also check for group synonyms that strongly suggest an existing pot
+        pot_keywords = ["pot", "pool", "circle", "squad", "fund", "team"]
+        if any(kw in prompt.lower() for kw in pot_keywords):
+             is_existing_group = True
+
+    group_id = None
+    if intent == "group_saving" and is_existing_group:
+        # Find the ID from the database based on the name
+        for g in GROUP_DATABASE:
+            if g["name"] == group:
+                group_id = g["id"]
+                break
+
     data = {
         "amount": amount_value,
         "currency": currency,
         "frequency": frequency,
-        "day_of_week": random.choice(DAYS) if frequency == "weekly" else None,
+        "day_of_week": secrets.choice(DAYS) if frequency == "weekly" else None,
         "start_date": None,
         "end_date": end_date,
-        "conditions": condition
+        "conditions": condition,
+        "is_existing_group": is_existing_group,
+        "group_name": group if intent == "group_saving" else None,
+        "group_id": group_id
     }
 
     clarification_question = (
@@ -220,8 +313,7 @@ def interpret(prompt, intent, amount, freq, goal, group):
         "data": data,
         "needs_clarification": needs_clarification,
         "clarification_question": clarification_question,
-        "raw_prompt": prompt,
-        "confidence": confidence_from_nulls(data)
+        "raw_prompt": prompt
     }
 
     return interpretation
@@ -233,11 +325,17 @@ def interpret(prompt, intent, amount, freq, goal, group):
 samples = []
 
 for i in range(NUM_SAMPLES):
-    intent = random.choice(INTENTS)
+    intent = secrets.choice(INTENTS)
     amount = random_amount()
-    freq = random.choice(FREQUENCIES)
-    goal = random.choice(GOALS)
-    group = random.choice(GROUPS) if intent == "group_saving" else None
+    freq = secrets.choice(FREQUENCIES)
+    goal = secrets.choice(GOALS)
+    
+    # Generate a random subset of groups representing "user's groups"
+    available_groups = secure_gen.sample(GROUP_DATABASE, secure_gen.randint(2, 6))
+    
+    # If group saving, pick one that is likely to be "mine"
+    group_obj = secrets.choice(available_groups)
+    group = group_obj["name"] if intent == "group_saving" else None
 
     prompt = build_prompt(intent, amount, freq, goal, group)
 
@@ -252,6 +350,9 @@ for i in range(NUM_SAMPLES):
 
     samples.append({
         "prompt": prompt,
+        "context": {
+            "user_groups": available_groups
+        },
         "interpretation": interpretation
     })
 
