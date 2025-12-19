@@ -349,8 +349,8 @@ for i in range(NUM_SAMPLES):
     )
 
     samples.append({
-        "prompt": prompt,
         "context": {
+            "prompt": prompt,
             "user_groups": available_groups
         },
         "interpretation": interpretation

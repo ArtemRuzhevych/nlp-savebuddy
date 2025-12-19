@@ -60,6 +60,7 @@ The script (`gen.py`) generates synthetic training samples for a finance-focused
 
 - **1000 samples** saved as `training_samples.json`
 - Each sample includes:
-  - `prompt`: The raw natural language input.
-  - `context`: The user's environment (e.g., existing groups).
+  - `context`: The full input environment, including:
+    - `prompt`: The raw natural language input.
+    - `user_groups`: The user's available groups.
   - `interpretation`: The structured intent and extracted parameters.
