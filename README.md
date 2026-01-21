@@ -18,7 +18,7 @@ For a detailed deep-dive into the NLP capabilities and logic, see [SaveBuddy Fea
 ### Prerequisites
 
 - Python 3.10+
-- Docker & Docker Compose (optional, for containerized run)
+- Docker (optional, for containerized run)
 
 ### Local Setup
 

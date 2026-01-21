@@ -99,12 +99,6 @@ class InterpretationService:
         
         if any(x in text_lower for x in ["eur", "euro", "€"]):
             return "EUR"
-        if any(x in text_lower for x in ["usd", "dollar", "$", "bucks"]):
-            return "USD"
-        if any(x in text_lower for x in ["pln", "zloty", "zł", "zl"]):
-            return "PLN"
-        if any(x in text_lower for x in ["gbp", "pound", "sterling", "£"]):
-            return "GBP"
             
         return "NOT_SUPPORTED"
     
@@ -144,7 +138,7 @@ class InterpretationService:
             f"{time_context}\n"
             f"User Prompt: {context.prompt}\n"
             f"Known Groups: {group_names}.\n"
-        )
+        ).lower()
         
 
         
